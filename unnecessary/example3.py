@@ -8,8 +8,8 @@ if __name__ == '__main__':
     beta = 1
     q0 = 0.1
     show_figure = False
-    for file_name in os.listdir('./solomon-100'):
-        file_path = os.path.join('./solomon-100', file_name)
+    for file_name in os.listdir('./dataset/solomon-100'):
+        file_path = os.path.join('./dataset/solomon-100', file_name)
         print('-' * 100)
         print('file_path: %s' % file_path)
         print('\n')

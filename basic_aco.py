@@ -31,6 +31,15 @@ class BasicACO:
 
         self.whether_or_not_to_show_figure = whether_or_not_to_show_figure
 
+        self.history = {
+            'iteration': [],
+            'best_cost': [],
+            'best_vehicle_num': [],
+            'time_elapsed': [],
+            'avg_cost': [],
+            'current_iter_best': []
+        }
+
     def run_basic_aco(self):
         # 开启一个线程来跑_basic_aco，使用主线程来绘图
         path_queue_for_figure = Queue()
@@ -101,6 +110,13 @@ class BasicACO:
             # 更新信息素表
             self.graph.global_update_pheromone(self.best_path, self.best_path_distance)
 
+            self.history['iteration'].append(iter)
+            self.history['best_cost'].append(self.best_path_distance if self.best_path_distance else float('inf'))
+            self.history['best_vehicle_num'].append(self.best_vehicle_num if self.best_vehicle_num else 0)
+            self.history['time_elapsed'].append(time.time() - start_time_total)
+            self.history['avg_cost'].append(np.mean(paths_distance))
+            self.history['current_iter_best'].append(paths_distance[best_index])
+
             given_iteration = 100
             if iter - start_iteration > given_iteration:
                 print('\n')
@@ -110,6 +126,13 @@ class BasicACO:
         print('\n')
         print('final best path distance is %f, number of vehicle is %d' % (self.best_path_distance, self.best_vehicle_num))
         print('it takes %0.3f second multiple_ant_colony_system running' % (time.time() - start_time_total))
+        
+        # save into csv files
+        import pandas as pd
+        
+        df = pd.DataFrame(self.history)
+        df.to_csv('./results/aco_results.csv', index=False)
+        print(f'Results saved to aco_results.csv')
 
     def select_next_index(self, ant):
         """

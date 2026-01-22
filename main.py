@@ -3,12 +3,13 @@ from basic_aco import BasicACO
 
 
 if __name__ == '__main__':
-    file_path = './solomon-100/c101.txt'
+    file_path = './dataset/homberger_1000_customer_instances/C1_10_1.txt'
+    
     ants_num = 10
-    max_iter = 200
+    max_iter = 500
     beta = 2
     q0 = 0.1
-    show_figure = True
+    show_figure = False 
 
     graph = VrptwGraph(file_path)
     basic_aco = BasicACO(graph, ants_num=ants_num, max_iter=max_iter, beta=beta, q0=q0,

@@ -59,8 +59,18 @@ class VrptwGraph:
                     vehicle_num = int(vehicle_num)
                     vehicle_capacity = int(vehicle_capacity)
                 elif count >= 10:
-                    node_list.append(line.split())
+                    parts = line.split()
+                    
+                    if len(parts) < 7:
+                        print(f"Line {count}: '{line.strip()}' -> parts: {parts} (SKIPPING)")
+                    else:
+                        node_list.append(parts)
                 count += 1
+        
+        print(f"\nTotal nodes parsed: {len(node_list)}")
+        if len(node_list) > 0:
+            print(f"First node: {node_list[0]}")
+        
         node_num = len(node_list)
         nodes = list(Node(int(item[0]), float(item[1]), float(item[2]), float(item[3]), float(item[4]), float(item[5]), float(item[6])) for item in node_list)
 
