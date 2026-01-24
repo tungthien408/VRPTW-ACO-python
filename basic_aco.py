@@ -9,7 +9,8 @@ import time
 
 
 class BasicACO:
-    def __init__(self, graph: VrptwGraph, ants_num=10, max_iter=200, beta=2, q0=0.1,
+    def __init__(self, graph: VrptwGraph, ants_num=10, max_iter=200, beta=2, q0=0.1, 
+                 result_path='./results/', filename='aco_results.csv',
                  whether_or_not_to_show_figure=True):
         super()
         # graph 结点的位置、服务时间信息
@@ -24,6 +25,8 @@ class BasicACO:
         self.beta = beta
         # q0 表示直接选择概率最大的下一点的概率
         self.q0 = q0
+        self.result_path = result_path
+        self.filename = filename
         # best path
         self.best_path_distance = None
         self.best_path = None
@@ -131,8 +134,9 @@ class BasicACO:
         import pandas as pd
         
         df = pd.DataFrame(self.history)
-        df.to_csv('./results/aco_results.csv', index=False)
-        print(f'Results saved to aco_results.csv')
+        output = self.result_path + self.filename
+        df.to_csv(output, index=False)
+        print(f'Results saved to {self.filename}')
 
     def select_next_index(self, ant):
         """
