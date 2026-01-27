@@ -34,7 +34,8 @@ class BasicACO:
             'best_vehicle_num': [],
             'time_elapsed': [],
             'avg_cost': [],
-            'current_iter_best': []
+            'current_iter_best': [],
+            'best_path': []  # Thêm lưu lộ trình tốt nhất tại mỗi iteration
         }
 
     def run_basic_aco(self):
@@ -96,6 +97,7 @@ class BasicACO:
             self.history['time_elapsed'].append(time.time() - start_time_total)
             self.history['avg_cost'].append(np.mean(paths_distance))
             self.history['current_iter_best'].append(paths_distance[best_index])
+            self.history['best_path'].append(str(self.best_path) if self.best_path else "")
 
             given_iteration = 100
             if iter - start_iteration > given_iteration:
@@ -108,11 +110,48 @@ class BasicACO:
         print('it takes %0.3f second multiple_ant_colony_system running' % (time.time() - start_time_total))
         
         import pandas as pd
+        import json
         
+        # Lưu lịch sử các iteration vào CSV
         df = pd.DataFrame(self.history)
         output = self.result_path + self.filename
         df.to_csv(output, index=False)
         print(f'Results saved to {self.filename}')
+        
+        # Lưu lộ trình tốt nhất vào file riêng
+        best_path_filename = self.filename.replace('.csv', '_best_path.json')
+        best_path_output = self.result_path + best_path_filename
+        
+        # Tách lộ trình thành các route riêng biệt
+        routes = []
+        current_route = []
+        for node in self.best_path:
+            if node == 0:
+                if current_route:
+                    routes.append(current_route)
+                current_route = []
+            else:
+                current_route.append(node)
+        
+        best_path_data = {
+            'best_path': self.best_path,
+            'best_path_distance': self.best_path_distance,
+            'best_vehicle_num': self.best_vehicle_num,
+            'total_time': time.time() - start_time_total,
+            'routes': routes,
+            'parameters': {
+                'ants_num': self.ants_num,
+                'max_iter': self.max_iter,
+                'alpha': self.alpha,
+                'beta': self.beta,
+                'q0': self.q0,
+                'rho': self.graph.rho
+            }
+        }
+        
+        with open(best_path_output, 'w') as f:
+            json.dump(best_path_data, f, indent=4)
+        print(f'Best path saved to {best_path_filename}')
 
     def select_next_index(self, ant):
         current_index = ant.current_index

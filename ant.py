@@ -5,23 +5,6 @@ from threading import Event
 
 
 class Ant:
-    """Represents a single ant (vehicle route builder) used by the ACO solver.
-
-    Responsibilities / state stored:
-    - `graph`: the shared problem graph (nodes, distances, capacity)
-    - `current_index`: the node index where the ant currently is
-    - `vehicle_load`: current vehicle load since last leaving depot
-    - `vehicle_travel_time`: elapsed time in the current route (since last depot)
-    - `travel_path`: ordered list of visited node indices (includes depots)
-    - `arrival_time`: arrival times for entries in travel_path (parallel list)
-    - `index_to_visit`: remaining customer nodes not yet visited by this ant
-    - `total_travel_distance`: cached total distance for the travel_path
-
-    Design notes:
-    - The ant resets load/time when it arrives at a depot (node.is_depot True).
-    - Methods that examine feasibility (check_condition) do not mutate state.
-    """
-
     def __init__(self, graph: VrptwGraph, start_index=0):
         super()
         self.graph = graph
