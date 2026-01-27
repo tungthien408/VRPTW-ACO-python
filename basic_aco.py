@@ -1,12 +1,74 @@
 import numpy as np
 import random
-from vprtw_aco_figure import VrptwAcoFigure
+# from vprtw_aco_figure import VrptwAcoFigure
 from vrptw_base import VrptwGraph, PathMessage
 from ant import Ant
 from threading import Thread
 from queue import Queue
 import time
+from multiprocessing import Pool, cpu_count
 
+def run_ant_tour_worker(ant_data):
+    """Hàm chạy cho từng con kiến trong một tiến trình riêng biệt"""
+    # Giải nén dữ liệu truyền vào
+    graph, ants_num, alpha, beta, q0 = ant_data
+    
+    from ant import Ant
+    ant = Ant(graph)
+    
+    while not ant.index_to_visit_empty():
+        # Logic chọn điểm tiếp theo (copy từ select_next_index)
+        current_index = ant.current_index
+        index_to_visit = ant.index_to_visit
+
+        transition_prob = (graph.pheromone_mat[current_index][index_to_visit] ** alpha) * \
+                          (graph.heuristic_info_mat[current_index][index_to_visit] ** beta)
+        transition_prob = transition_prob / np.sum(transition_prob)
+
+        if np.random.rand() < q0:
+            max_prob_index = np.argmax(transition_prob)
+            next_index = index_to_visit[max_prob_index]
+        else:
+            # Dùng hàm random của numpy để an toàn trong đa tiến trình
+            next_index = np.random.choice(index_to_visit, p=transition_prob)
+            
+        if not ant.check_condition(next_index):
+            # Nếu không thỏa mãn thì tìm lại hoặc về kho (0)
+            next_index = 0
+
+        ant.move_to_next_index(next_index)
+        # Lưu ý: local_update_pheromone trong đa tiến trình sẽ chỉ có tác dụng 
+        # cục bộ trong process đó, không ảnh hưởng đến các con kiến ở process khác.
+        graph.local_update_pheromone(ant.current_index, next_index)
+
+    ant.move_to_next_index(0)
+    graph.local_update_pheromone(ant.current_index, 0)
+    
+    return ant
+
+def clean_data(obj):
+    """Chuyển đổi đối tượng NumPy sang kiểu Python thuần túy"""
+    if isinstance(obj, (np.integer, np.int64)):
+        return int(obj)
+    if isinstance(obj, (np.floating, np.float64)):
+        return float(obj)
+    if isinstance(obj, list):
+        return [clean_data(item) for item in obj]
+    return obj
+
+import json
+import csv
+import numpy as np
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(MyEncoder, self).default(obj)
 
 class BasicACO:
     def __init__(self, graph: VrptwGraph, ants_num=10, max_iter=200, alpha=1, beta=2, q0=0.1, 
@@ -43,20 +105,26 @@ class BasicACO:
         basic_aco_thread = Thread(target=self._basic_aco, args=(path_queue_for_figure,))
         basic_aco_thread.start()
 
+        """
         if self.whether_or_not_to_show_figure:
             figure = VrptwAcoFigure(self.graph.nodes, path_queue_for_figure)
             figure.run()
+        """
         basic_aco_thread.join()
 
         if self.whether_or_not_to_show_figure:
             path_queue_for_figure.put(PathMessage(None, None))
-
+ 
     def _basic_aco(self, path_queue_for_figure: Queue):
         start_time_total = time.time()
-
         start_iteration = 0
+        
+        pool = Pool(processes=cpu_count() - 1)
         for iter in range(self.max_iter):
-
+            ant_task_data = [(self.graph, self.ants_num, self.alpha, self.beta, self.q0) 
+                             for _ in range(self.ants_num)]
+            ants = pool.map(run_ant_tour_worker, ant_task_data) 
+            """
             ants = list(Ant(self.graph) for _ in range(self.ants_num))
             for k in range(self.ants_num):
 
@@ -72,7 +140,7 @@ class BasicACO:
 
                 ants[k].move_to_next_index(0)
                 self.graph.local_update_pheromone(ants[k].current_index, 0)
-
+            """
             paths_distance = np.array([ant.total_travel_distance for ant in ants])
 
             best_index = np.argmin(paths_distance)
@@ -105,18 +173,40 @@ class BasicACO:
                 print('iteration exit: can not find better solution in %d iteration' % given_iteration)
                 break
 
+        pool.close()
+        pool.join()
         print('\n')
         print('final best path distance is %f, number of vehicle is %d' % (self.best_path_distance, self.best_vehicle_num))
         print('it takes %0.3f second multiple_ant_colony_system running' % (time.time() - start_time_total))
         
-        import pandas as pd
-        import json
+        # import pandas as pd
+        output = self.result_path + self.filename
         
+        # Lấy danh sách các tiêu đề cột từ dictionary history
+        keys = list(self.history.keys())
+        
+        with open(output, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            # Ghi dòng đầu tiên (header)
+            writer.writerow(keys)
+            # Ghi các dòng dữ liệu
+            # Giả sử tất cả các list trong history có cùng độ dài (số vòng lặp)
+            for i in range(len(self.history['iteration'])):
+                row = []
+                for k in keys:
+                    val = self.history[k][i]
+                    cleaned_val = clean_data(val)
+                    row.append(cleaned_val)
+                writer.writerow(row)
+                
+        print(f'Results saved to {output} using csv module')
+        """
         # Lưu lịch sử các iteration vào CSV
         df = pd.DataFrame(self.history)
         output = self.result_path + self.filename
         df.to_csv(output, index=False)
         print(f'Results saved to {self.filename}')
+        """
         
         # Lưu lộ trình tốt nhất vào file riêng
         best_path_filename = self.filename.replace('.csv', '_best_path.json')
@@ -150,7 +240,7 @@ class BasicACO:
         }
         
         with open(best_path_output, 'w') as f:
-            json.dump(best_path_data, f, indent=4)
+            json.dump(best_path_data, f, indent=4, cls=MyEncoder)
         print(f'Best path saved to {best_path_filename}')
 
     def select_next_index(self, ant):
