@@ -6,7 +6,7 @@ from ant import Ant
 from threading import Thread
 from queue import Queue
 import time
-from multiprocessing import Pool, cpu_count
+# from multiprocessing import Pool, cpu_count
 
 def run_ant_tour_worker(ant_data):
     """Hàm chạy cho từng con kiến trong một tiến trình riêng biệt"""
@@ -119,12 +119,12 @@ class BasicACO:
         start_time_total = time.time()
         start_iteration = 0
         
-        pool = Pool(processes=cpu_count() - 1)
+        # pool = Pool(processes=cpu_count() - 1)
         for iter in range(self.max_iter):
             ant_task_data = [(self.graph, self.ants_num, self.alpha, self.beta, self.q0) 
                              for _ in range(self.ants_num)]
-            ants = pool.map(run_ant_tour_worker, ant_task_data) 
-            """
+            # ants = pool.map(run_ant_tour_worker, ant_task_data) 
+            # """
             ants = list(Ant(self.graph) for _ in range(self.ants_num))
             for k in range(self.ants_num):
 
@@ -140,7 +140,7 @@ class BasicACO:
 
                 ants[k].move_to_next_index(0)
                 self.graph.local_update_pheromone(ants[k].current_index, 0)
-            """
+            # """
             paths_distance = np.array([ant.total_travel_distance for ant in ants])
 
             best_index = np.argmin(paths_distance)
@@ -173,8 +173,8 @@ class BasicACO:
                 print('iteration exit: can not find better solution in %d iteration' % given_iteration)
                 break
 
-        pool.close()
-        pool.join()
+        # pool.close()
+        # pool.join()
         print('\n')
         print('final best path distance is %f, number of vehicle is %d' % (self.best_path_distance, self.best_vehicle_num))
         print('it takes %0.3f second multiple_ant_colony_system running' % (time.time() - start_time_total))
