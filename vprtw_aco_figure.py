@@ -4,15 +4,6 @@ from multiprocessing import Queue as MPQueue
 
 class VrptwAcoFigure:
     def __init__(self, nodes: list, path_queue: MPQueue):
-        """
-        matplotlib绘图计算需要放在主线程，寻找路径的工作建议另外开一个线程，
-        当寻找路径的线程找到一个新的path的时候，将path放在path_queue中，图形绘制线程就会自动进行绘制
-        queue中存放的path以PathMessage（class）的形式存在
-        nodes中存放的结点以Node（class）的形式存在，主要使用到Node.x, Node.y 来获取到结点的坐标
-
-        :param nodes: nodes是各个结点的list，包括depot
-        :param path_queue: queue用来存放工作线程计算得到的path，队列中的每一个元素都是一个path，path中存放的是各个结点的id
-        """
 
         self.nodes = nodes
         self.figure = plt.figure(figsize=(10, 10))
