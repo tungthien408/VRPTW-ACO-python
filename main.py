@@ -9,13 +9,13 @@ from basic_aco import BasicACO
 if __name__ == '__main__':
     
     input_path = './dataset/'
-    result_path = './results/param4/v2/c/c2/'
+    result_path = './results/param4/v2/rc/rc2/'
 
     file_path_solomon = ['solomon_25/', 'solomon_50/', 'solomon-100/']
     file_path_homberger = [
         # 'homberger_200_customer_instances/', 
         # """
-        'homberger_400_customer_instances/', 
+        #'homberger_400_customer_instances/', 
         'homberger_600_customer_instances/', 
         'homberger_800_customer_instances/', 
         'homberger_1000_customer_instances/'
@@ -25,17 +25,17 @@ if __name__ == '__main__':
     input_filename_homberger = [
         # 'C2_2_1.txt', 
         # """
-        'C2_4_1.txt', 
-        'C2_6_1.txt', 
-        'C2_8_1.txt', 
-        'C1_10_1.txt'
+        #'RC2_4_1.txt', 
+        'RC2_6_1.txt', 
+        'RC2_8_1.txt', 
+        'RC2_10_1.txt'
         # """
         ]
     output_filename_solomon = ['aco_results_25.csv', 'aco_results_50.csv', 'aco_results_100.csv']
     output_filename_homberger = [
         # 'aco_results_200.csv', 
         # """
-        'aco_results_400.csv', 
+        #'aco_results_400.csv', 
         'aco_results_600.csv', 
         'aco_results_800.csv', 
         'aco_results_1000.csv'
